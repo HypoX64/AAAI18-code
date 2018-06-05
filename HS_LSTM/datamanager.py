@@ -1,125 +1,109 @@
+import sys, os
+import collections
 import numpy as np
-import tensorflow as tf
-import json, random
-
+import random
+import math
+#Refactoring @Hypo 2018-05-23
 class DataManager(object):
     def __init__(self, dataset):
-        '''
-        Read the data from dir "dataset"
-        '''
+        #Read the data from dir "dataset" which including 'train.res', 'dev.res', 'test.res'
         self.origin = {}
         for fname in ['train', 'dev', 'test']:
-            data = []
-            for line in open('%s/%s.res' % (dataset, fname)):
-                s = json.loads(line.strip())
-                if len(s) > 0:
-                    data.append(s)
-            self.origin[fname] = data
+            linelist=[]
+            f = open('%s/%s.res' % (dataset, fname))
+            for line in f.readlines():
+                line=line.strip()
+                linelist.append(line)
+            f.close()
+            self.origin[fname] = linelist
+
+
     def getword(self):
         '''
         Get the words that appear in the data.
         Sorted by the times it appears.
         {'ok': 1, 'how': 2, ...}
-        Never run this function twice.
         '''
-        wordcount = {}
-        def dfs(node):
-            if node.has_key('children'):
-                dfs(node['children'][0])
-                dfs(node['children'][1])
-            else:
-                word = node['word'].lower()
-                wordcount[word] = wordcount.get(word, 0) + 1
+        word_list=[]
         for fname in ['train', 'dev', 'test']:
-            for sent in self.origin[fname]:
-                dfs(sent)
-        words = wordcount.items()
-        words.sort(key = lambda x : x[1], reverse = True)
-        self.words = words
-        self.wordlist = {item[0]: index+1 for index, item in enumerate(words)}
+            for line in self.origin[fname]:
+                line=line[9:] #remove rating
+                word_list += line.split(' ')
+        #sort words by by the times it appears
+        worddict=str(collections.Counter(word_list)) 
+        worddict=worddict.strip('Counter').strip('(').strip(')')
+        worddict=eval(worddict)
+        for i,(word,num) in enumerate(worddict.items(),1):
+            worddict[word]=i
+        self.wordlist=worddict
+        # print(self.wordlist)
+        print('find word:',len(self.wordlist))
         return self.wordlist
-    
+
     def getdata(self, grained, maxlenth):
         '''
         Get all the data, divided into (train,dev,test).
-        For every sentence, {'words':[1,3,5,...], 'solution': [0,1,0,0,0]}
-        For each data, [sentence1, sentence2, ...]
-        Never run this function twice.
+        For every line, words:word's appear times, solution:rating, lenth:length of the line, action:crop sentences to phrase
+        {'words':[1,3,5,...], 'solution': [0,1,0,0,0...], 'lenth': lens, action': [0,1,0,1...]}
         '''
-        def one_hot_vector(r):
-            s = np.zeros(grained, dtype=np.float32)
-            s[r] += 1.0
-            return s
-        def dfs(node, words):
-            if node.has_key('children'):
-                dfs(node['children'][0], words)
-                dfs(node['children'][1], words)
-                node['size'] = node['children'][0]['size'] + node['children'][1]['size']
-            else:
-                word = self.wordlist[node['word'].lower()]
-                words.append(word)
-                node['size'] = 1
-        def look_action(node, action, ulen):
-            if node['size'] <= ulen:
-                action += [0] * (node['size'] - 1)
-                action.append(1)
-            elif node.has_key('children'):
-                look_action(node['children'][0], action, ulen)
-                look_action(node['children'][1], action, ulen)
-        self.getword()
         self.data = {}
+        self.getword()
         for fname in ['train', 'dev', 'test']:
             self.data[fname] = []
-            for sent in self.origin[fname]:
-                words, action = [], []
-                dfs(sent, words)
-                lens = len(words)
-                words += [0] * (maxlenth - lens)
-                solution = one_hot_vector(int(sent['rating']))
-                look_action(sent, action, int(np.sqrt(lens) + 0.5))
+            wordlist_line=[]
+            for line in self.origin[fname]:
+                words = np.zeros(maxlenth,int)
+                action = []
+                solution = np.zeros(grained, dtype=np.float32)
+                solution[int(line[7])]=1.0 #get rating
+                line=line[9:]
+                wordlist_line=line.split(' ')
+                wordlist_line=wordlist_line[0:maxlenth]
+                lens = len(wordlist_line)
+                action_flag = int(math.sqrt(lens))
+                for i,word in enumerate(wordlist_line,0):
+                    words[i]=self.wordlist[word]#get words
+                    if (i+1)%action_flag == 0:#get action
+                        action.append(1) 
+                    else:
+                        action.append(0)
                 now = {'words': np.array(words), \
-                        'solution': solution,\
-                        'lenth': lens, \
-                        'action': action}
+                    'solution': solution,\
+                    'lenth': lens,\
+                    'action': action}
                 self.data[fname].append(now)
+        # print(self.data['train'])
         return self.data['train'], self.data['dev'], self.data['test']
     
     def get_wordvector(self, name):
+        '''
+        Find words in wordvector, and get the vector
+        '''
+        print('Begin find words in wordvector......')
+        print('it may cost 60 s ,please wait......')
+        n = 400000 # depend on wordvector
+        dim = 300
         fr = open(name)
-        n, dim = map(int, fr.readline().split())
         self.wv = {}
         for i in range(n - 1):
             vec = fr.readline().split()
             word = vec[0].lower()
-            vec = map(float, vec[1:])
-            if self.wordlist.has_key(word):
+            vec = list(map(float, vec[1:]))
+            if word in self.wordlist:
                 self.wv[self.wordlist[word]] = vec
         self.wordvector = []
         losscnt = 0
         for i in range(len(self.wordlist) + 1):
-            if self.wv.has_key(i):
+            if i in self.wv:
                 self.wordvector.append(self.wv[i])
             else:
                 losscnt += 1
                 self.wordvector.append(np.random.uniform(-0.1,0.1,[dim]))
         self.wordvector = np.array(self.wordvector, dtype=np.float32)
-        print losscnt, "words not find in wordvector"
-        print len(self.wordvector), "words in total"
+        print(losscnt, "words not find in wordvector")
+        print(len(self.wordvector), "words in total")
         return self.wordvector
-
-#datamanager = DataManager("../TrainData/SUBJ")
-#train_data, test_data, dev_data = datamanager.getdata(2, 200)
-#wv = datamanager.get_wordvector("../WordVector/vector.25dim")
-#mxlen = 0
-#for item in test_data:
-#    print item['action'], item['lenth']
-#    if item['lenth'] > mxlen:
-#        mxlen = item['lenth']
-#print mxlen
-
-#datamanager = DataManager("../TrainData/MR")
-#train_data, dev_data, test_data = datamanager.getdata(2,70);
-#for item in dev_data:
-#    print json.dumps(item['action'][:item['lenth']])
-#    print json.dumps([datamanager.words[i-1][0] for i in item['words']][:item['lenth']])
-
+# test
+# dataManager = DataManager('../Datasets/MR')
+# dataManager.getdata(2,10)
+# dataManager.get_wordvector('../WordVector/vector.300dim')

@@ -21,9 +21,9 @@ dataManager = DataManager(args.dataset)
 train_data, dev_data, test_data = dataManager.getdata(args.grained, args.maxlenth)
 word_vector = dataManager.get_wordvector(args.word_vector)
 
-print "train_data ", len(train_data)
-print "dev_data", len(dev_data)
-print "test_data", len(test_data)
+print("train_data ", len(train_data))
+print("dev_data", len(dev_data))
+print("test_data", len(test_data))
 if args.fasttest == 1:
     train_data = train_data[:100]
     dev_data = dev_data[:20]
@@ -73,13 +73,16 @@ def sampling_random(lenth, p_action = None):
         actions[lenth-1] = 1
         action_pos.append(lenth-1)
     if len(actions) != args.maxlenth:
-        print lenth, p_action
+        print(lenth, p_action)
     return actions, action_pos
 
 def train(sess, actor, critic, train_data, batch_size, samplecnt, LSTM_trainable=True, RL_trainable=True):
-    print "training : total ", len(train_data), "nodes. ", len(train_data)/batch_size, " batchs." 
+    print("training : total ", len(train_data), "nodes. ", len(train_data)/batch_size, " batchs.") 
     random.shuffle(train_data)
-    for b in range(len(train_data)/batch_size):
+    #debug @Hypo 2018-05-20
+    # for b in range(len(train_data) / batch_size):
+    totloss = 0.
+    for b in range(int(len(train_data) / batch_size)):
         datas = train_data[b * batch_size: (b+1) * batch_size]
         totloss = 0.
         actor.assign_active_network()
@@ -136,10 +139,11 @@ def train(sess, actor, critic, train_data, batch_size, samplecnt, LSTM_trainable
                 critic.update_target_network()
             else:
                 critic.assign_target_network()
-        if (b + 1) % 500 == 0:
-            acc_test = test(sess, actor, critic, test_data, not RL_trainable)
-            acc_dev  = test(sess, actor, critic, dev_data, not RL_trainable)
-            print "batch ",b , "total loss ", totloss, "----test: ", acc_test, "| dev: ", acc_dev
+        # if (b + 1) % 500 == 0:
+        # acc_test = test(sess, actor, critic, test_data, not RL_trainable)
+        # acc_dev  = test(sess, actor, critic, dev_data, not RL_trainable)
+        # print("batch ",b , "total loss ", totloss, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
+    print("total loss:", totloss)
 
 def test(sess, actor, critic, test_data, Random=False):
     acc = 0
@@ -154,7 +158,7 @@ def test(sess, actor, critic, test_data, Random=False):
             actions, action_pos = sampling_random(lenth, paction)
         
         if len(actions) != args.maxlenth:
-            print inputs
+            print(inputs)
         #predict
         out = critic.predict_target([inputs], [actions], [action_pos], [lenth], [len(action_pos)])
         if np.argmax(out) == np.argmax(solution):
@@ -171,7 +175,7 @@ with tf.Session(config = config) as sess:
 
     #print variables
     for item in tf.trainable_variables():
-        print (item.name, item.get_shape())
+        print((item.name, item.get_shape()))
     
     saver = tf.train.Saver()
     
@@ -180,16 +184,20 @@ with tf.Session(config = config) as sess:
         pass
     elif args.LSTMpretrain == '':
         sess.run(tf.global_variables_initializer())
+        # If the data set is too small ,please increase cycle times  @Hypo 2015-05-23
+        # default:for i in range(0,2):
         for i in range(0,2):
             train(sess, actor, critic, train_data, args.batchsize, args.samplecnt, RL_trainable=False)
             critic.assign_target_network()
             acc_test = test(sess, actor, critic, test_data, True)
             acc_dev = test(sess, actor, critic, dev_data, True)
-            print "LSTM_only ",i, "----test: ", acc_test, "| dev: ", acc_dev
+            # debug @Hypo 2015-05-24
+            #print("LSTM_only ",i, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
+            print("LSTM_only ",i+1, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
             saver.save(sess, "checkpoints/"+args.name+"_base", global_step=i)
-        print "LSTM pretrain OK"
+        print("LSTM pretrain OK")
     else:
-        print "Load LSTM from ", args.LSTMpretrain
+        print("Load LSTM from ", args.LSTMpretrain)
         saver.restore(sess, args.LSTMpretrain)
         pass
     #RL pretrain
@@ -198,11 +206,13 @@ with tf.Session(config = config) as sess:
             train(sess, actor, critic, train_data, args.batchsize, args.samplecnt, LSTM_trainable=False)
             acc_test = test(sess, actor, critic, test_data)
             acc_dev = test(sess, actor, critic, dev_data)
-            print "RL pretrain ", i, "----test: ", acc_test, "| dev: ", acc_dev
+            # debug @Hypo 2015-05-24
+            # print("RL pretrain ", i, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
+            print("RL pretrain ", i+1, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
             saver.save(sess, "checkpoints/"+args.name+"_RL", global_step=i)
-        print "RL pretrain OK"
+        print("RL pretrain OK")
     else:
-        print "Load RL from ", args.RLpretrain
+        print("Load RL from ", args.RLpretrain)
         saver.restore(sess, args.RLpretrain)
     #train
     results = []
@@ -210,7 +220,9 @@ with tf.Session(config = config) as sess:
         train(sess, actor, critic, train_data, args.batchsize, args.samplecnt)
         acc_test = test(sess, actor, critic, test_data)
         acc_dev  = test(sess, actor, critic, dev_data)
-        print "epoch ", e, "---- test: ", acc_test, "| dev: ", acc_dev
+        # debug @Hypo 2015-05-24
+        #print("epoch ", e, "---- test: ", acc_test, "| dev_acc: ", acc_dev)
+        print("epoch ", e+1, "----test_acc: ", acc_test, "| dev_acc: ", acc_dev)
         saver.save(sess, "checkpoints/"+args.name, global_step=e)
 
 

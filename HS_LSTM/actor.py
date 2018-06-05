@@ -21,7 +21,7 @@ class ActorNetwork(object):
             self.optimizer = tf.train.AdagradOptimizer(self.learning_rate)
         elif optimizer == 'Adadelta':
             self.optimizer = tf.train.AdadeltaOptimizer(self.learning_rate)
-        print self.optimizer 
+        print(self.optimizer) 
         self.num_other_variables = len(tf.trainable_variables())
 
         #actor network(updating)
@@ -52,7 +52,7 @@ class ActorNetwork(object):
         self.grads = [tf.placeholder(tf.float32, [600, 1]),
                         tf.placeholder(tf.float32, [1,]),
                         tf.placeholder(tf.float32, [600, 1])]
-        self.optimize = self.optimizer.apply_gradients(zip(self.grads, self.network_params[:-1]), global_step=self.global_step)
+        self.optimize = self.optimizer.apply_gradients(list(zip(self.grads, self.network_params[:-1])), global_step=self.global_step)
 
     def create_actor_network(self):
         input_l = tf.placeholder(tf.float32, shape=[1, self.dim*2])

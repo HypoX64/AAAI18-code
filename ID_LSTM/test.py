@@ -25,9 +25,9 @@ if args.fasttest == 1:
     train_data = train_data[:100]
     dev_data = dev_data[:20]
     test_data = test_data[:20]
-print "train_data ", len(train_data)
-print "dev_data", len(dev_data)
-print "test_data", len(test_data)
+print("train_data ", len(train_data))
+print("dev_data", len(dev_data))
+print("test_data", len(test_data))
 
 def sampling_RL(sess, actor, inputs, vec, lenth, Random=True):
     current_lower_state = np.zeros((1, 2*args.dim), dtype=np.float32)
@@ -90,24 +90,24 @@ def test(sess, actor, critic, test_data, noRL=False):
         total_dis += Rlenth
         for i in range(lenth):
             wd = dataManager.words[inputs[i]-1][0]
-            if owords.has_key(wd):
+            if wd in owords:
                 owords[wd] = owords[wd] + 1
             else:
                 owords[wd] = 1
             if actions[i] == 0:
-                if rwords.has_key(wd):
+                if wd in rwords:
                     rwords[wd] = rwords[wd] + 1
                 else:
                     rwords[wd] = 1
     ratewords = {}
-    for (key, value) in rwords.items():
+    for (key, value) in list(rwords.items()):
         ratewords[key] = float(value) / owords[key]
-    rdwords = ratewords.items()
+    rdwords = list(ratewords.items())
     rdwords.sort(key = lambda x : x[1], reverse = True)
     outcnt = 0
     for i in range(len(rdwords)):
         if owords[rdwords[i][0]] > 20:
-            print rdwords[i], owords[rdwords[i][0]]
+            print(rdwords[i], owords[rdwords[i][0]])
             outcnt += 1
         if outcnt > 20:
             break;
@@ -125,11 +125,11 @@ with tf.Session(config = config) as sess:
     actor = ActorNetwork(sess, args.dim, args.optimizer, args.lr, args.tau)
     #print variables
     for item in tf.trainable_variables():
-        print (item.name, item.get_shape())
+        print((item.name, item.get_shape()))
     
     saver = tf.train.Saver()
     
     saver.restore(sess, "checkpoints/best816")
 
-    print test(sess, actor, critic, dev_data)
+    print(test(sess, actor, critic, dev_data))
 

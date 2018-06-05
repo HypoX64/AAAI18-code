@@ -6,7 +6,7 @@ class Parser(object):
         parser.add_argument('--name', type=str, default='test')
         parser.add_argument('--fasttest', type=int, default=0, choices=[0, 1])
         parser.add_argument('--seed', type=int, default=int(1000*time.time()))
-        parser.add_argument('--dataset', type=str, default='../TrainData/MR')
+        parser.add_argument('--dataset', type=str, default='../Datasets/MR')
         parser.add_argument('--maxlenth', type=int, default=70)
         parser.add_argument('--grained', type=int, default=2)
         parser.add_argument('--optimizer', type=str, default='Adam', \

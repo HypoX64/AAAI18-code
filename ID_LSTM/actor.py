@@ -46,12 +46,12 @@ class ActorNetwork(object):
         self.log_target_scaled_out = tf.log(self.target_scaled_out)
 
         self.actor_gradients = tf.gradients(self.log_target_scaled_out, self.target_network_params, self.action_gradient)
-        print self.actor_gradients
+        print(self.actor_gradients)
 
         self.grads = [tf.placeholder(tf.float32, [600,1]), 
                         tf.placeholder(tf.float32, [1,]),
                         tf.placeholder(tf.float32, [300, 1])]
-        self.optimize = self.optimizer.apply_gradients(zip(self.grads, self.network_params[:-1]), global_step=self.global_step)
+        self.optimize = self.optimizer.apply_gradients(list(zip(self.grads, self.network_params[:-1])), global_step=self.global_step)
 
     def create_actor_network(self):
         input_l = tf.placeholder(tf.float32, shape=[1, self.dim*2])

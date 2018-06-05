@@ -21,9 +21,9 @@ dataManager = DataManager(args.dataset)
 train_data, dev_data, test_data = dataManager.getdata(args.grained, args.maxlenth)
 word_vector = dataManager.get_wordvector(args.word_vector)
 
-print "train_data ", len(train_data)
-print "dev_data", len(dev_data)
-print "test_data", len(test_data)
+print("train_data ", len(train_data))
+print("dev_data", len(dev_data))
+print("test_data", len(test_data))
 if args.fasttest == 1:
     train_data = train_data[:100]
     dev_data = dev_data[:20]
@@ -80,8 +80,8 @@ def test(sess, actor, critic, test_data, Random=False):
         if np.argmax(out) == np.argmax(solution):
             acc += 1
 
-        print json.dumps(actions[:lenth])
-        print json.dumps([dataManager.words[i-1][0] for i in inputs][:lenth])
+        print(json.dumps(actions[:lenth]))
+        print(json.dumps([dataManager.words[i-1][0] for i in inputs][:lenth]))
         #print out, solution
 
         total_lenth += lenth
@@ -107,7 +107,7 @@ with tf.Session(config = config) as sess:
 
     #print variables
     for item in tf.trainable_variables():
-        print (item.name, item.get_shape())
+        print((item.name, item.get_shape()))
     
     saver = tf.train.Saver()
     

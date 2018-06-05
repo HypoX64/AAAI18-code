@@ -21,7 +21,7 @@ class LSTM_CriticNetwork(object):
         self.dropout = dropout
         self.init = tf.random_uniform_initializer(-0.05, 0.05, dtype=tf.float32)
         self.L2regular = 0.00001 # add to parser
-        print "optimizer: ", optimizer
+        print("optimizer: ", optimizer)
         if optimizer == 'Adam':
             self.optimizer = tf.train.AdamOptimizer(self.learning_rate)
         elif optimizer == 'Adagrad':
@@ -79,7 +79,7 @@ class LSTM_CriticNetwork(object):
         #self.loss += self.loss2 * self.L2regular
         #self.loss_target += self.loss2 * self.L2regular
         self.gradients = tf.gradients(self.loss_target, self.target_network_params)
-        self.optimize = self.optimizer.apply_gradients(zip(self.gradients, self.network_params), global_step = self.global_step)
+        self.optimize = self.optimizer.apply_gradients(list(zip(self.gradients, self.network_params)), global_step = self.global_step)
         #self.optimize = self.optimizer.minimize(self.loss)
         
         #total variables
@@ -95,10 +95,10 @@ class LSTM_CriticNetwork(object):
         #Lower network
         if Scope[-1] == 'e':
             vec = tf.nn.embedding_lookup(self.wordvector, inputs)
-            print "active"
+            print("active")
         else:
             vec = tf.nn.embedding_lookup(self.target_wordvector, inputs)
-            print "target"
+            print("target")
         cell = LSTMCell(self.dim, initializer=self.init, state_is_tuple=False)
         self.state_size = cell.state_size
         actions = tf.to_float(action)
