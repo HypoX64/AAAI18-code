@@ -20,29 +20,27 @@
 * change "--dataset" into your datasets' path
 
 # 5 Test and run the program
-* Fast test 
-* you can easily test this program in this way 
+* Fast test , you can easily test this program in this way
 
-* HS_LSTM
+HS_LSTM
 ```shell
-* cd 'AAAI18-code/HS_LSTM'
-* python3 main.py  --maxlenth 10 --epoch 10 --batchsize 1 --lr 0.001 --dataset '../Datasets/Fasttest'
+cd 'AAAI18-code/HS_LSTM'
+python3 main.py  --maxlenth 10 --epoch 10 --batchsize 1 --lr 0.001 --dataset '../Datasets/Fasttest'
 ```
-* ID_LSTM
+ID_LSTM
 ```shell
 cd 'AAAI18-code/ID_LSTM' 
 python3 main.py  --maxlenth 10 --epoch 10 --batchsize 1 --lr 0.001 --dataset '../Datasets/Fasttest'
 ```
 
-* Run Dateset:MR
-* it may cost more than one day without GPU
+* Run Dateset:MR, it may cost more than one day without GPU
 
-* HS_LSTM
+HS_LSTM
 ```shell
 cd 'AAAI18-code/HS_LSTM'
 python3 main.py --maxlenth 30 --epoch 10 --batchsize 10 --lr 0.0005
 ```
-* ID_LSTM
+ID_LSTM
 ```shell
 cd 'AAAI18-code/ID_LSTM'
 python3 main.py --maxlenth 30 --epoch 10 --batchsize 10 --lr 0.0005
