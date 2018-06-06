@@ -52,7 +52,7 @@ python3 main.py --maxlenth 30 --epoch 10 --batchsize 10 --lr 0.0005
 * debug some errors
 * refactor 'datamanager.py' to adapt Datasets
 
-README @Hypo Updata 2018-06-05
+README @Hypo Update 2018-06-06
 
 # Original README
 
