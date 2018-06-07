@@ -39,7 +39,6 @@ def getdataset(pathlist,subfile,mode,train,dev):#pathlist:file_path_list,subfile
 def main():
     filedir = input("filedir:").strip()
     filedir=str(filedir.replace("'",""))
-
     mode = int(input("choose the mode 0:article 1:sentence :").strip())
     
     filepathlist = Traversal(filedir)
