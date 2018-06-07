@@ -3,7 +3,7 @@ import collections
 import numpy as np
 import random
 import math
-#Refactoring @Hypo 2018-05-23
+#Refactor @Hypo 2018-05-23
 class DataManager(object):
     def __init__(self, dataset):
         #Read the data from dir "dataset" which including 'train.res', 'dev.res', 'test.res'
