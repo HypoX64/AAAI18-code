@@ -1,6 +1,5 @@
 import sys, os
 import random
-
 #traversal all file in rootdir and return
 def Traversal(rootDir):
     file_list=[]
